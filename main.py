@@ -7,7 +7,7 @@ import threading
 # Создаем фиктивный веб-сайт для бесплатного тарифа Render
 app = Flask(__name__)
 
-TELEGRAM_TOKEN = "8634076483:AAFBXaGnTy-KeJbtXi-bIsNldEHvR0ts2mE"
+TELEGRAM_TOKEN = "9268507501:AAGISYrcBRf4pU0sdWbamcVLHPW_ovKObQ8"
 GEMINI_API_KEY = "AQ.Ab8RN6JHsw63k_Qh7M3M-mcwR4eVO0COQRKr7W4JEbg1geRP6A"
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
