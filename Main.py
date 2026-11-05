@@ -1,5 +1,4 @@
-11.05 09:18
-Main.py
+
 import telebot
 import requests
 import os
