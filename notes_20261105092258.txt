@@ -1,0 +1,43 @@
+11.05 09:18
+Main.py
+import telebot
+import requests
+import os
+
+# Подтягиваем ключи из настроек сервера для безопасности
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "8634076483:AAFBXaGnTy-KeJbtXi-bIsNldEHvR0ts2mE")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AQ.Ab8RN6JHsw63k_Qh7M3M-mcwR4eVO0COQRKr7W4JEbg1geRP6A")
+
+bot = telebot.TeleBot(TELEGRAM_TOKEN)
+
+def ask_gemini_direct(user_message):
+    url = "https://googleapis.com"
+    headers = {
+        "Content-Type": "application/json",
+        "x-goog-api-key": GEMINI_API_KEY
+    }
+    data = {
+        "contents": [{"parts": [{"text": user_message}]}]
+    }
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        result = response.json()
+        return result['candidates']['content']['parts']['text']
+    except Exception as e:
+        print(f"Ошибка запроса: {e}")
+        return "Извините, произошла техническая заминка. Пожалуйста, попробуйте еще раз!"
+
+@bot.message_handler(commands=['start'])
+def start_message(message):
+    bot.reply_to(message, "Привет! Я твой Telegram-бот на базе ИИ. Спроси меня о чём угодно!")
+
+@bot.message_handler(func=lambda message: True)
+def handle_all_messages(message):
+    bot.send_chat_action(message.chat.id, 'typing')
+    ai_response = ask_gemini_direct(message.text)
+    bot.reply_to(message, ai_response)
+
+print("Бот успешно запущен в облаке!")
+bot.infinity_polling()
+
+
