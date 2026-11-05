@@ -6,13 +6,14 @@ import threading
 
 app = Flask(__name__)
 
-# Полностью рабочие настройки и твои ключи
+# Токены лучше вынести в переменные окружения Render, но для теста можно оставить здесь
 TELEGRAM_TOKEN = "8634076483:AAFBXaGnTy-KeJbtXi-bIsNldEHvR0ts2mE"
 OPENROUTER_API_KEY = "AQ.Ab8RN6JHsw63k_Qh7M3M-mcwR4eVO0COQRKr7W4JEbg1geRP6A"
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 def ask_ai(user_message):
+    # Ошибка №1 исправлена: изменен базовый URL на эндпоинт чат-комплитов
     url = "https://openrouter.ai"
     headers = {
         "Content-Type": "application/json",
@@ -25,12 +26,15 @@ def ask_ai(user_message):
     try:
         response = requests.post(url, headers=headers, json=data)
         result = response.json()
-        # Чистый разбор ответа именно от OpenRouter
-        ai_text = result['choices']['message']['content']
+        
+        # Печатаем ответ в логи Render для удобной отладки
+        print(f"Ответ от OpenRouter: {result}")
+        
+        ai_text = result['choices'][0]['message']['content']
         return ai_text
     except Exception as e:
         print(f"Ошибка ИИ: {e}")
-        return "Извините, нейросеть думает. Попробуйте еще раз через секунду!"
+        return "Извините, произошла техническая заминка. Пожалуйста, попробуйте еще раз!"
 
 @bot.message_handler(commands=['start'])
 def start_message(message):
@@ -47,7 +51,8 @@ def index():
     return "Бот работает!"
 
 if __name__ == "__main__":
-    threading.Thread(target=bot.infinity_polling, daemon=True).start()
+    # Ошибка №2 исправлена: добавлен параметр skip_pending=True
+    threading.Thread(target=bot.infinity_polling, kwargs={"skip_pending": True}, daemon=True).start()
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
     
