@@ -13,21 +13,21 @@ GEMINI_API_KEY = "AQ.Ab8RN6JHsw63k_Qh7M3M-mcwR4eVO0COQRKr7W4JEbg1geRP6A"
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 def ask_gemini_direct(user_message):
-    url = "https://googleapis.com"
-    headers = {
-        "Content-Type": "application/json",
-        "x-goog-api-key": GEMINI_API_KEY
-    }
-    data = {
-        "contents": [{
-            "parts": [{"text": user_message}]
-        }]
-    }
+    url = "https://openrouter.ai"
+ headers = {
+     "Content-Type": "application/json",
+     "Authorization": "Bearer AQ.Ab8RN6JHsw63k_Qh7M3M-mcwR4eVO0COQRKr7W4JEbg1geRP6A"
+ }
+ data = {
+     "model": "meta-llama/llama-3-8b-instruct:free",
+     "messages": [{"role": "user", "content": user_message}]
+ }
     try:
         response = requests.post(url, headers=headers, json=data)
         result = response.json()
         ai_text = result['candidates']['content']['parts']['text']
-        return ai_text
+        return response.json()['choices'][0]['message']['content']
+        
     except Exception as e:
         print(f"Ошибка: {e}")
         return "Извините, произошла техническая заминка. Пожалуйста, попробуйте еще раз!"
