@@ -1,11 +1,14 @@
-
 import telebot
 import requests
 import os
+from flask import Flask
+import threading
 
-# Подтягиваем ключи из настроек сервера для безопасности
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN", "8634076483:AAFBXaGnTy-KeJbtXi-bIsNldEHvR0ts2mE")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AQ.Ab8RN6JHsw63k_Qh7M3M-mcwR4eVO0COQRKr7W4JEbg1geRP6A")
+# Создаем фиктивный веб-сайт для бесплатного тарифа Render
+app = Flask(__name__)
+
+TELEGRAM_TOKEN = "8634076483:AAFBXaGnTy-KeJbtXi-bIsNldEHvR0ts2mE"
+GEMINI_API_KEY = "AQ.Ab8RN6JHsw63k_Qh7M3M-mcwR4eVO0COQRKr7W4JEbg1geRP6A"
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
@@ -16,19 +19,22 @@ def ask_gemini_direct(user_message):
         "x-goog-api-key": GEMINI_API_KEY
     }
     data = {
-        "contents": [{"parts": [{"text": user_message}]}]
+        "contents": [{
+            "parts": [{"text": user_message}]
+        }]
     }
     try:
         response = requests.post(url, headers=headers, json=data)
         result = response.json()
-        return result['candidates']['content']['parts']['text']
+        ai_text = result['candidates']['content']['parts']['text']
+        return ai_text
     except Exception as e:
-        print(f"Ошибка запроса: {e}")
+        print(f"Ошибка: {e}")
         return "Извините, произошла техническая заминка. Пожалуйста, попробуйте еще раз!"
 
 @bot.message_handler(commands=['start'])
 def start_message(message):
-    bot.reply_to(message, "Привет! Я твой Telegram-бот на базе ИИ. Спроси меня о чём угодно!")
+    bot.reply_to(message, "Привет! Я твой бесплатный ИИ-бот. Задай мне любой вопрос!")
 
 @bot.message_handler(func=lambda message: True)
 def handle_all_messages(message):
@@ -36,7 +42,14 @@ def handle_all_messages(message):
     ai_response = ask_gemini_direct(message.text)
     bot.reply_to(message, ai_response)
 
-print("Бот успешно запущен в облаке!")
-bot.infinity_polling()
+@app.route('/')
+def index():
+    return "Бот работает!"
 
-
+if __name__ == "__main__":
+    # Запускаем бота в отдельном потоке, чтобы он не мешал сайту
+    threading.Thread(target=bot.infinity_polling, daemon=True).start()
+    # Слушаем порт, который требует Render
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
+    
