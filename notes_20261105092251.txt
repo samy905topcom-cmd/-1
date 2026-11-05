@@ -1,5 +1,0 @@
-11.05 09:19
-requirements.txt
-pyTelegramBotAPI
-requests
-
